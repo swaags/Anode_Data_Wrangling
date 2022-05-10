@@ -9,6 +9,7 @@ Bs = 115;%GPa for copper substrate (from McMaster)
 hf = 24e-6;%film thickness
 projdir = 'Pattern6Data';
 mass = .0155*.92;
+C_rate = 4.2;
 
 MOSSFileList = dir(fullfile(projdir,'*.txt'));
 M = size(MOSSFileList,1);

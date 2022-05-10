@@ -1,19 +1,20 @@
 
 %plot things from each half cycle (can just copy and paste this section
 %once this has been run once)
-sz = [length(chargeCycles) 7];
-varNames = {'cycle_number','max_stress','start_stress','stress_change','capacity_start_mAhg','capacity_end_mAhg','charge_current'};
+sz = [length(chargeCycles) 8];
+varNames = {'cycle_number','max_stress','start_stress','stress_change','capacity_start_mAhg','capacity_end_mAhg','charge_current','c_rate'};
 chronoArray = zeros(sz);
 for i = 1:length(chargeCycles)
     hsi = find(chargeCycles{i}(:,6)<.011);%find the row corresponding to the start of the hold
     maxStrs = chargeCycles{i}(hsi(1),2);
     startStrs = chargeCycles{i}(1,2);
     strsChg = maxStrs-startStrs;
-    chronoArray(i,:) = [i, maxStrs, startStrs, strsChg, chargeCycles{i}(hsi(1),9)/mass, chargeCycles{i}(end,9)/mass,chargeCycles{i}(2,7)];
+    crate = round(abs(chargeCycles{i}(2,7)/C_rate),2);
+    chronoArray(i,:) = [i, maxStrs, startStrs, strsChg, chargeCycles{i}(hsi(1),9)/mass, chargeCycles{i}(end,9)/mass,chargeCycles{i}(2,7),crate];
 end
 
 chrono = array2table(chronoArray,'VariableNames',varNames)
-writetable(chrono,fullfile(projdir,'Pattern6Chronology.csv'))
+%writetable(chrono,fullfile(projdir,'Pattern6Chronology.csv'))
 
 
 figure(6)
