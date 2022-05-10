@@ -1,4 +1,4 @@
-
+%MUST RUN Pattern6reallign FIRST
 %plot things from each half cycle (can just copy and paste this section
 %once this has been run once)
 sz = [length(chargeCycles) 8];
