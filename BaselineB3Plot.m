@@ -15,7 +15,7 @@ for i = 1:length(chargeCycles)
 end
 
 chrono = array2table(chronoArray,'VariableNames',varNames)
-writetable(chrono,fullfile(projdir,'BaselineB3Chronology.csv'))
+%writetable(chrono,fullfile(projdir,'BaselineB3Chronology.csv'))
 
 
 figure(6)
