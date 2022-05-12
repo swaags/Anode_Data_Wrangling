@@ -1,11 +1,12 @@
-%MUST RUN Baseline1reallign FIRST
+%MUST RUN Pattern3reallign FIRST
+
 %plot things from each half cycle (can just copy and paste this section
 %once this has been run once)
 sz = [length(chargeCycles) 10];
 varNames = {'cycle_number','max_stress','start_stress','stress_change','chgcap_start_mAhg','chgcap_end_mAhg','dischgcap_end_mAhg','dischgcap_start_mAhg','charge_current','c_rate'};
 chronoArray = zeros(sz);
 for i = 1:length(chargeCycles)
-    hsi = find(chargeCycles{i}(:,6)<.011);%find the row corresponding to the start of the bottom hold
+    hsi = find(chargeCycles{i}(:,6)<.013);%find the row corresponding to the start of the bottom hold
     dhsi = find(dischargeCycles{i+1}(:,6)>1.49);% top hold
     maxStrs = chargeCycles{i}(hsi(1),2);
     startStrs = chargeCycles{i}(1,2);
@@ -15,7 +16,8 @@ for i = 1:length(chargeCycles)
 end
 
 chrono = array2table(chronoArray,'VariableNames',varNames)
-writetable(chrono,fullfile(projdir,'Baseline1Chronology.csv'))
+writetable(chrono,fullfile(projdir,'Pattern3Chronology.csv'))
+
 
 
 figure(6)
@@ -32,5 +34,5 @@ hold off
 legend('Stress at start of charge','Stress at end of charge','Stress Change','Charge Capacity (end)','Discharge Capacity (end)')
 xlabel('Cycle Number')
 ylabel('Capacity mAh/g')
-title('Baseline 1 Cycles')
+title('Pattern 6 Cycles')
 

@@ -2,20 +2,19 @@ close all;clear
 format long;
 
 %taken from code Catherine provided me
-hs = 509e-6;%microns current substrate 
-C_angle = 0.78173;%[ cos(a)/ 2L ]
-Bs = 115;%GPa for copper substrate (from McMaster)
-hf = 31e-6;%film thickness
-projdir = 'Baseline4Data';
-Crate = 3.6;
-mass = .02*.92;
-C_rate = 3.6;
+hs = 500e-6; %microns current substrate 
+C_angle = 0.78173; %[ cos(a)/ 2L ]
+Bs = 86.38; %GPa for copper substrate (from McMaster)
+hf = 43e-6; %film thickness
+projdir = 'Pattern3';
+mass = .0123;
+C_rate = 3.69;
 
-MOSSFileList = dir(fullfile(projdir,'*.txt'));
+MOSSFileList = dir(fullfile(projdir,'MOSS','*.txt'));
 M = size(MOSSFileList,1);
 ECFileList = dir(fullfile(projdir,'*.mpt'));
 N = size(ECFileList,1);
-MOSSlineups = csvread(fullfile(projdir,'MOSStimes.csv'));%load time offset files
+MOSSlineups = csvread(fullfile(projdir,'MOSStimes.csv'));
 EClineups = csvread(fullfile(projdir,'ECtimes.csv'));
 MList = cell(1,M);
 EList = cell(1,N);
@@ -34,33 +33,33 @@ end
 Etable = vertcat(EList{1:N});
 
 for k = 1:M
-    MList{k} = readmatrix(fullfile(projdir,MOSSFileList(k).name)); %load data
-    MList{k}(:,2) = (Bs*hs^2*MList{k}(:,2)*10*C_angle)/(6*hf);%Stoney /100 for percent *1000 to get MPa
-    MList{k}(:,1) = round(MList{k}(:,1)+MOSSlineups(k,2),-1); %add time offsets for each file, round to nearest 10 s
+    MList{k} = readmatrix(fullfile(projdir,'MOSS',MOSSFileList(k).name)); %load data
+    MList{k}(:,2) = (Bs*hs^2*MList{k}(:,2)*10*C_angle)/(6*hf);%Stoney
+    MList{k}(:,1) = round(MList{k}(:,1)+MOSSlineups(k,2),-1); %add time offsets for each file
     [~,uid] = unique(MList{k}(:,1),'stable');%remove rows with same time entry
     MList{k} = array2table(MList{k}(uid,:),'VariableNames',{'time_s','stress_MPa'});
 end
 Mtable = vertcat(MList{1:M});
 
-B4master = outerjoin(Mtable,Etable,'MergeKeys',true); %join on time collumn, hence rounding to nearest 10 s
+P3master = outerjoin(Mtable,Etable,'MergeKeys',true);
 % UNCOMMENT THIS TO MAKE A CSV FILE
-%writetable(B4master,fullfile(projdir,'Baseline4Stress.csv'))
+writetable(P3master,fullfile(projdir,'Pattern3Stress.csv'));
 
 %make list of half cycle indices
-[l hCycIndex] = findgroups(B4master.halfCycle);
+[l hCycIndex] = findgroups(P3master.halfCycle);
 if hCycIndex(1)==0
     hCycIndex = hCycIndex(2:end);
 end
 %build subtables from each half cycle and just charge cycles
 for i = hCycIndex'
-    thisCycle = find(B4master.halfCycle==i);
-    startVals = B4master(thisCycle(1),:);
-    halfCycles{i} = B4master(thisCycle,:);
+    thisCycle = find(P3master.halfCycle==i);
+    startVals = P3master(thisCycle(1),:);
+    halfCycles{i} = P3master(thisCycle,:);
     %halfCycles{i}.time_s = halfCycles{i}.time_s - startVals.time_s;
     if startVals.ox_red == 0
-        chargeCycs{i} = table2array(B4master(thisCycle,:));
+        chargeCycs{i} = table2array(P3master(thisCycle,:));
     elseif startVals.ox_red == 1
-        dischargeCycs{i} = table2array(B4master(thisCycle,:));
+        dischargeCycs{i} = table2array(P3master(thisCycle,:));
     end
 end
 empInd = cellfun(@isempty, chargeCycs) == 0;
@@ -68,25 +67,31 @@ chargeCycles = chargeCycs(empInd);
 DempInd = cellfun(@isempty, dischargeCycs) == 0;
 dischargeCycles = dischargeCycs(DempInd);
 
+%DELETE THIRD ELEMENT BECAUSE REASONS
+chargeCycles(3)=[];
+
+totC = max(P3master.cycleNumber)+1;
+Cycles = cell(1,totC);
 %make list of FULL cycle indices, defined by EC labs as a climb and fall of
 %voltage, so opposite of what we are considering. 
-[l fCycIndex] = findgroups(B4master.cycleNumber);
+[l fCycIndex] = findgroups(P3master.cycleNumber);
 if fCycIndex(1)==0
     fCycIndex = fCycIndex(2:end);
 end
 %build subtables from each FULL cycle and rezero time
 for i = fCycIndex'
-    thisCycle = find(B4master.cycleNumber==i);
-    startVals = B4master(thisCycle(1),:);
-    Cycles{i} = B4master(thisCycle,:);
+    thisCycle = find(P3master.cycleNumber==i);
+    startVals = P3master(thisCycle(1),:);
+    Cycles{i} = P3master(thisCycle,:);
     %Cycles{i}.time_s = Cycles{i}.time_s - startVals.time_s;
 end
 
 figure(1)
-plot(B4master.time_s/3600,B4master.stress_MPa);
+plot(P3master.time_s/3600,P3master.stress_MPa);
 set(gca,'FontSize',26)
 xlabel('Time (Hrs)'); ylabel('Stress (MPa)');
 hold on;
-plot(B4master.time_s/3600,B4master.x_I__mA)
-plot(B4master.time_s/3600,B4master.Ewe_V)
+plot(P3master.time_s/3600,P3master.x_I__mA)
+plot(P3master.time_s/3600,P3master.Ewe_V)
 hold off;
+

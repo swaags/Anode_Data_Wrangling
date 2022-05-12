@@ -45,10 +45,6 @@ BB3master = outerjoin(Mtable,Etable,'MergeKeys',true); %join on time collumn, he
 % UNCOMMENT THIS TO MAKE A CSV FILE
 %writetable(BB3master,fullfile(projdir,'BaselineB3Stress.csv'))
 
-
-totHC = max(BB3master.halfCycle);
-halfCycles = cell(1,totHC);
-chargeCycles = cell(1,ceil(totHC/2));
 %make list of half cycle indices
 [l hCycIndex] = findgroups(BB3master.halfCycle);
 if hCycIndex(1)==0
@@ -62,13 +58,15 @@ for i = hCycIndex'
     %halfCycles{i}.time_s = halfCycles{i}.time_s - startVals.time_s;
     if startVals.ox_red == 0
         chargeCycs{i} = table2array(BB3master(thisCycle,:));
+    elseif startVals.ox_red == 1
+        dischargeCycs{i} = table2array(BB3master(thisCycle,:));
     end
 end
 empInd = cellfun(@isempty, chargeCycs) == 0;
 chargeCycles = chargeCycs(empInd);
+DempInd = cellfun(@isempty, dischargeCycs) == 0;
+dischargeCycles = dischargeCycs(DempInd);
 
-totC = max(BB3master.cycleNumber)+1;
-Cycles = cell(1,totC);
 %make list of FULL cycle indices, defined by EC labs as a climb and fall of
 %voltage, so opposite of what we are considering. 
 [l fCycIndex] = findgroups(BB3master.cycleNumber);
