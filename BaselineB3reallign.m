@@ -50,7 +50,7 @@ BB3master = outerjoin(Mtable,Etable,'MergeKeys',true); %join on time collumn, he
 if hCycIndex(1)==0
     hCycIndex = hCycIndex(2:end);
 end
-%build subtables from each half cycle and just charge cycles
+%build subtables from each half cycle, charge cycle, and discharge cycle
 for i = hCycIndex'
     thisCycle = find(BB3master.halfCycle==i);
     startVals = BB3master(thisCycle(1),:);
