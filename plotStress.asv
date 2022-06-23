@@ -1,15 +1,11 @@
+%run <x>reallign first
 
-
-figure(1)
+figure(2)
 hold on
-varNames = {'cycle_number','chg_stress_change_start','chg_stress_change_end','dischg_stress_change_start',...
-    'dischg_stress_change_end','low_hold_stress_change','chgcap_start_mAhg','chgcap_end_mAhg','dischgcap_start_mAhg',...
-    'dischgcap_end_mAhg','charge_current','c_rate','chg_stress_change_start_norm','chg_stress_change_end_norm',...
-    'dischg_stress_change_start_norm','dischg_stress_change_end_norm'};
+rates = [];
 for i = 1:length(chargeCycles)
     thisChg = chargeCycles{i};
-    hsi = find(thisChg(:,6)<.011);%find the row corresponding to the start of the bottom hold
-    %CHARGE
+    hsi = find(thisChg(:,6)<.013);%find the row corresponding to the start of the bottom hold
     startStrs = thisChg(1,2);%build stress differences for each section of cycle
     chgHoldStartStrs = thisChg(hsi(1),2);
     chgHoldEndStrs = thisChg(end,2);
@@ -24,12 +20,14 @@ for i = 1:length(chargeCycles)
     lowHoldStrs = abs(chgHoldStartStrs - chgHoldEndStrs);
     crate = round(abs(thisChg(2,7)/C_rate),2);
     t = thisChg(1,1);
-    times = thisChg(:,1)-t;
-    stress = thisChg(:,2)-startStrs
-    CR = round(crate+1);
+    times = (thisChg(:,1)-t).*crate;
+    stress = thisChg(:,2)-startStrs;
+    CR = round(crate);
+    rates(i) = round(crate,1);
+    CR = CR+1;
     clr = {'r-','g-','b-','g-'};
-    plot(times.*crate(1:hsi),stress(1:hsi),clr{CR})
-    
+    plot(times(1:hsi),stress(1:hsi),clr{CR}) 
 end
-
+'C-rates are:'
+string(unique(rates))
     

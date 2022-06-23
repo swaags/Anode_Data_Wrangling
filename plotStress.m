@@ -1,11 +1,11 @@
-
+%run <x>reallign first
 
 figure(2)
 hold on
+rates = [];
 for i = 1:length(chargeCycles)
     thisChg = chargeCycles{i};
     hsi = find(thisChg(:,6)<.013);%find the row corresponding to the start of the bottom hold
-    %CHARGE
     startStrs = thisChg(1,2);%build stress differences for each section of cycle
     chgHoldStartStrs = thisChg(hsi(1),2);
     chgHoldEndStrs = thisChg(end,2);
@@ -23,10 +23,11 @@ for i = 1:length(chargeCycles)
     times = (thisChg(:,1)-t).*crate;
     stress = thisChg(:,2)-startStrs;
     CR = round(crate);
+    rates(i) = round(crate,1);
     CR = CR+1;
     clr = {'r-','g-','b-','g-'};
-    plot(times(1:hsi),stress(1:hsi),clr{CR})
-    
+    plot(times(1:hsi),stress(1:hsi),clr{CR}) 
 end
-
-    
+title('Stress vs. SOC for various C-rates')
+'C-rates are:'
+string(unique(rates))
