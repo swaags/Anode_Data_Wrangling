@@ -6,7 +6,7 @@ rates = [];
 for i = 1:length(chargeCycles)
     thisChg = chargeCycles{i};
     hsi = find(thisChg(:,6)<.013);%find the row corresponding to the start of the bottom hold
-    crate = round(abs(thisChg(2,7)/C_rate),2)
+    crate = round(abs(thisChg(2,7)/C_rate),2);
     t = thisChg(1,1);
     times = (thisChg(:,1)-t).*crate;
     times = times(1:hsi);
@@ -38,4 +38,5 @@ end
 %writetable(NormVolt,fullfile(projdir,'Pattern6NormalizedVoltages.csv'))
 title('Voltage vs. SOC for various C-rates')
 'C-rates are:'
+rates
 string(unique(rates))

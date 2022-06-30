@@ -3,7 +3,6 @@
 figure(2)
 hold on
 rates = [];
-%NormStressCell = cell(1,length(chargeCycles));
 for i = 1:length(chargeCycles)
     thisChg = chargeCycles{i};
     hsi = find(thisChg(:,6)<.013);%find the row corresponding to the start of the bottom hold
@@ -27,19 +26,17 @@ for i = 1:length(chargeCycles)
     CR = CR+1;
     clr = {'r-','g-','b-','g-'};
     plot(times,stress,clr{CR})
-    names = ["times",strcat("stress Cyc ",string(i)," C-rate ",string(crate))];
+    names = ["times",strcat("stress ",string(i)," C: ",string(crate))];
     NormStressCell{i} = table(times,stress,'VariableNames',names);
 end
 NormStressCell=NormStressCell(~cellfun('isempty',NormStressCell));
-
 NormStress = NormStressCell{1};
 
 for i = 2:length(NormStressCell)
-    i
     NormStress = outerjoin(NormStress,NormStressCell{i},'MergeKeys',true);
 end
 %change the pink stuff in quotes to whatever you want the filename to be
-writetable(NormStress,fullfile(projdir,'Pattern6NormalizedStresses.csv'))
+writetable(NormStress,'Pattern6NormalizedStresses.csv')
 title('Stress vs. SOC for various C-rates')
 'C-rates are:'
 string(unique(rates))
