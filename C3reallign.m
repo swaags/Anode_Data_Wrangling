@@ -41,53 +41,53 @@ for k = 1:M
 end
 Mtable = vertcat(MList{1:M});
 
-A9master = outerjoin(Mtable,Etable,'MergeKeys',true);
+C3master = outerjoin(Mtable,Etable,'MergeKeys',true);
 % UNCOMMENT THIS TO MAKE A CSV FILE
-writetable(A9master,fullfile(projdir,'A9Stress.csv'));
+%writetable(C3master,fullfile(projdir,'C3Stress.csv'));
 
-totHC = max(A9master.halfCycle);
+totHC = max(C3master.halfCycle);
 halfCycles = cell(1,totHC);
 chargeCycles = cell(1,ceil(totHC/2));
 %make list of half cycle indices
-[l hCycIndex] = findgroups(A9master.halfCycle);
+[l hCycIndex] = findgroups(C3master.halfCycle);
 if hCycIndex(1)==0
     hCycIndex = hCycIndex(2:end);
 end
 %build subtables from each half cycle and just charge cycles
 for i = hCycIndex'
-    thisCycle = find(A9master.halfCycle==i);
-    startVals = A9master(thisCycle(1),:);
-    halfCycles{i} = A9master(thisCycle,:);
+    thisCycle = find(C3master.halfCycle==i);
+    startVals = C3master(thisCycle(1),:);
+    halfCycles{i} = C3master(thisCycle,:);
     %halfCycles{i}.time_s = halfCycles{i}.time_s - startVals.time_s;
     if startVals.ox_red == 0
-        chargeCycs{i} = table2array(A9master(thisCycle,:));
+        chargeCycs{i} = table2array(C3master(thisCycle,:));
     end
 end
 empInd = cellfun(@isempty, chargeCycs) == 0;
 chargeCycles = chargeCycs(empInd);
 
 
-totC = max(A9master.cycleNumber)+1;
+totC = max(C3master.cycleNumber)+1;
 Cycles = cell(1,totC);
 %make list of FULL cycle indices, defined by EC labs as a climb and fall of
 %voltage, so opposite of what we are considering. 
-[l fCycIndex] = findgroups(A9master.cycleNumber);
+[l fCycIndex] = findgroups(C3master.cycleNumber);
 if fCycIndex(1)==0
     fCycIndex = fCycIndex(2:end);
 end
 %build subtables from each FULL cycle and rezero time
 for i = fCycIndex'
-    thisCycle = find(A9master.cycleNumber==i);
-    startVals = A9master(thisCycle(1),:);
-    Cycles{i} = A9master(thisCycle,:);
+    thisCycle = find(C3master.cycleNumber==i);
+    startVals = C3master(thisCycle(1),:);
+    Cycles{i} = C3master(thisCycle,:);
     %Cycles{i}.time_s = Cycles{i}.time_s - startVals.time_s;
 end
 
 figure(1)
-plot(A9master.time_s/3600,A9master.stress_MPa);
+plot(C3master.time_s/3600,C3master.stress_MPa);
 set(gca,'FontSize',26)
 xlabel('Time (Hrs)'); ylabel('Stress (MPa)');
 hold on;
-plot(A9master.time_s/3600,A9master.x_I__mA)
-plot(A9master.time_s/3600,A9master.Ewe_V)
+plot(C3master.time_s/3600,C3master.x_I__mA)
+plot(C3master.time_s/3600,C3master.Ewe_V)
 hold off;
