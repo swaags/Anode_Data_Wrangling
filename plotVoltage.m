@@ -5,7 +5,12 @@ hold on
 rates = [];
 for i = 1:length(chargeCycles)
     thisChg = chargeCycles{i};
-    hsi = find(thisChg(:,6)<.013);%find the row corresponding to the start of the bottom hold
+    if min(thisChg(:,6)) < 0
+        %hsi = find(thisChg(:,6)< -0.097) %find the row corresponding to the start of the bottom hold (plating)
+        hsi = length(thisChg);
+    else
+        hsi = find(thisChg(:,6)<0.013) %find the row corresponding to the start of the bottom hold
+    end
     crate = round(abs(thisChg(2,7)/C_rate),2);
     t = thisChg(1,1);
     times = (thisChg(:,1)-t).*crate;
@@ -20,10 +25,10 @@ for i = 1:length(chargeCycles)
         times = round(downsample(times,round(10/timeStep)),-1);
         voltage = downsample(voltage,round(10/timeStep));
     end
-    CR = round(crate);
+    CR = round(crate*2);
     rates(i) = round(crate,1);
     CR = CR+1;
-    clr = {'r-','g-','b-','g-'};
+    clr = {'r-','g-','b-','c-','m-','y-','k-'};
     plot(times,voltage,clr{CR}) 
     names = ["times",strcat("volt ",string(i)," C: ",string(crate))];
     NormVoltCell{i} = table(times,voltage,'VariableNames',names);
@@ -35,8 +40,7 @@ for i = 2:length(NormVoltCell)
     NormVolt = outerjoin(NormVolt,NormVoltCell{i},'MergeKeys',true);
 end
 %change the pink stuff in quotes to whatever you want the filename to be
-%writetable(NormVolt,fullfile(projdir,'Pattern6NormalizedVoltages.csv'))
+%writetable(NormVolt,fullfile(projdir,'XXXNormalizedVoltages.csv'))
 title('Voltage vs. SOC for various C-rates')
 'C-rates are:'
-rates
 string(unique(rates))

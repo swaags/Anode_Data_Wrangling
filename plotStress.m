@@ -5,12 +5,17 @@ hold on
 rates = [];
 for i = 1:length(chargeCycles)
     thisChg = chargeCycles{i};
-    hsi = find(thisChg(:,6)<.013);%find the row corresponding to the start of the bottom hold
-    startStrs = thisChg(1,2);%build stress differences for each section of cycle
+    if min(thisChg(:,6)) < 0
+        %hsi = find(thisChg(:,6)< -0.097) %find the row corresponding to the start of the bottom hold (plating)
+        hsi = length(thisChg);
+    else
+        hsi = find(thisChg(:,6)<0.013) %find the row corresponding to the start of the bottom hold
+    end
     crate = round(abs(thisChg(2,7)/C_rate),2);
     t = thisChg(1,1);
     times = (thisChg(:,1)-t).*crate;
     times = times(1:hsi);
+    startStrs = thisChg(1,2);%build stress differences for each section of cycle
     stress = thisChg(:,2)-startStrs;
     stress = stress(1:hsi);
     if hsi(1) == 1 || sum(isnan(stress)) == length(stress)
@@ -36,7 +41,7 @@ for i = 2:length(NormStressCell)
     NormStress = outerjoin(NormStress,NormStressCell{i},'MergeKeys',true);
 end
 %change the pink stuff in quotes to whatever you want the filename to be
-writetable(NormStress,'Pattern6NormalizedStresses.csv')
+%writetable(NormStress,'XXXNormalizedStresses.csv')
 title('Stress vs. SOC for various C-rates')
 'C-rates are:'
 string(unique(rates))
