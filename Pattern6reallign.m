@@ -11,7 +11,7 @@ projdir = 'Pattern6Data';
 mass = .0155*.92;
 C_rate = 4.2;
 
-MOSSFileList = dir(fullfile(projdir,'*.txt'));
+MOSSFileList = dir(fullfile(projdir,'*.csv'));
 M = size(MOSSFileList,1);
 ECFileList = dir(fullfile(projdir,'*.mpt'));
 N = size(ECFileList,1);
@@ -70,6 +70,7 @@ dischargeCycles = dischargeCycs(DempInd);
 
 %DELETE BECAUSE REASONS
 dischargeCycles(22) = [];
+
 
 %make list of FULL cycle indices, defined by EC labs as a climb and fall of
 %voltage, so opposite of what we are considering. 
