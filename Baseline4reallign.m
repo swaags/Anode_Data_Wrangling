@@ -44,7 +44,7 @@ Mtable = vertcat(MList{1:M});
 
 B4master = outerjoin(Mtable,Etable,'MergeKeys',true); %join on time collumn, hence rounding to nearest 10 s
 % UNCOMMENT THIS TO MAKE A CSV FILE
-%writetable(B4master,fullfile(projdir,'Baseline4Stress.csv'))
+%writetable(B4master,'Baseline4Stress.csv')
 
 %make list of half cycle indices
 [l hCycIndex] = findgroups(B4master.halfCycle);
@@ -90,3 +90,96 @@ hold on;
 plot(B4master.time_s/3600,B4master.x_I__mA)
 plot(B4master.time_s/3600,B4master.Ewe_V)
 hold off;
+
+%plot things from each half cycle (can just copy and paste this section
+%once this has been run once)
+sz = [length(chargeCycles) 12];
+varNames = {'cycle_number','chg_stress_change_start','chg_stress_change_end','dischg_stress_change_start',...
+    'dischg_stress_change_end','low_hold_stress_change','chgcap_start_mAhg','chgcap_end_mAhg','dischgcap_start_mAhg',...
+    'dischgcap_end_mAhg','charge_current','c_rate','chg_stress_change_start_norm','chg_stress_change_end_norm',...
+    'dischg_stress_change_start_norm','dischg_stress_change_end_norm'};
+chronoArray = zeros(sz);
+for i = 1:length(chargeCycles)
+    thisChg = chargeCycles{i};
+    thisDis = dischargeCycles{i+1};
+    hsi = find(thisChg(:,6)<.011);%find the row corresponding to the start of the bottom hold
+    dhsi = find(thisDis(:,6)>1.49);% top hold
+    %CHARGE
+    startStrs = thisChg(1,2);%build stress differences for each section of cycle
+    chgHoldStartStrs = thisChg(hsi(1),2);
+    chgHoldEndStrs = thisChg(end,2);
+    if isnan(chgHoldStartStrs)%use last available data if final stress value is NaN
+        lastIndex = sum(~isnan(thisChg(:,2)));
+        if lastIndex > 0
+            chgHoldStartStrs = thisChg(lastIndex,2);
+        end
+    end
+    chgStrsChangeStart = abs(chgHoldStartStrs-startStrs);
+    chgStrsChangeEnd = abs(chgHoldEndStrs-startStrs);
+    lowHoldStrs = abs(chgHoldStartStrs - chgHoldEndStrs);
+    %DISCHARGE
+    dischgStartStrs = thisDis(1,2);
+    dischgHoldStartStrs = thisDis(dhsi(1),2);
+    dischgHoldEndStrs = thisDis(end,2);
+    if isnan(dischgHoldEndStrs)%use last available data if final stress value is NaN
+        lastIndex = sum(~isnan(thisDis(:,2)));
+        if lastIndex > 0
+            dischgHoldEndStrs = thisDis(lastIndex,2);
+        end
+    end
+    dischgStrsChangeStart = abs(dischgHoldStartStrs - dischgStartStrs);
+    dischgStrsChangeEnd = abs(dischgHoldEndStrs - dischgStartStrs);
+    crate = round(abs(thisChg(2,7)/C_rate),2);
+    chronoArray(i,:) = [i, chgStrsChangeStart,chgStrsChangeEnd, dischgStrsChangeStart,dischgStrsChangeEnd,lowHoldStrs,...
+        thisChg(hsi(1),9)/mass, thisChg(end,9)/mass, thisDis(dhsi(1),8)/mass, thisDis(end,8)/mass,thisChg(2,7),crate];
+end
+%make normalized stress collumns
+chronoArray(:,13:16) = chronoArray(:,2:5)./chronoArray(:,7:10);
+chrono = array2table(chronoArray,'VariableNames',varNames)
+
+
+%normalize capacity by fitting c/10 discharge capacity fade curve
+figure(5)
+cTenths = chrono(find(chrono.c_rate<.11),{'cycle_number','dischgcap_end_mAhg'});
+plot(cTenths.cycle_number,cTenths.dischgcap_end_mAhg,'ko')
+xlabel('cycle number');
+ylabel('capacity (mAh/g)');
+modelFun = @(b,x) b(1) + b(2) * exp(-b(3)*x(:, 1));
+beta0 = [220,100,.2]; 
+mdl = fitnlm(cTenths,modelFun,beta0);
+yfit = modelFun(mdl.Coefficients{:,1}',chrono.cycle_number);
+hold on
+%plot results to check fit
+plot(chrono.cycle_number,yfit)
+title(projdir);
+legend('data','fit');
+hold off
+
+%add normalized capacity and C rate column to chrono table
+chrono.adjusted_cap  = yfit;
+chrono.actual_c_rate = abs(chrono.charge_current./chrono.adjusted_cap/mass);
+
+%writetable(chrono,'Baseline4Chronology.csv')
+
+
+figure(6)
+yyaxis left
+plot(chrono.cycle_number,chrono.chg_stress_change_start,'-bo')
+hold on
+plot(chrono.cycle_number,chrono.chg_stress_change_end,'-bs')
+plot(chrono.cycle_number,chrono.dischg_stress_change_start,'-ro')
+plot(chrono.cycle_number,chrono.dischg_stress_change_end,'-rs')
+plot(chrono.cycle_number,chrono.low_hold_stress_change,'-go')
+ylabel('Stress MPa')
+yyaxis right
+plot(chrono.cycle_number,chrono.chgcap_start_mAhg,'-b*')
+plot(chrono.cycle_number,chrono.chgcap_end_mAhg,'-b+')
+plot(chrono.cycle_number,chrono.dischgcap_start_mAhg,'-r*')
+plot(chrono.cycle_number,chrono.dischgcap_end_mAhg,'-r+')
+hold off
+
+legend('Charge Stress Change St','Charge Stress Change End','Discharge Stress Change St','Discharge Stress Change End',...
+    'Low Hold Stress Change','Charge Capacity Start','Charge Capacity End','Discharge Capacity Start','Discharge Capacity End')
+xlabel('Cycle Number')
+ylabel('Capacity mAh/g')
+title('Baseline 4 Cycles')
