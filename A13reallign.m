@@ -2,13 +2,13 @@ close all;clear
 format long;
 
 %taken from code Catherine provided me
-hs = 670e-6;%microns current substrate 
+hs = 484e-6;%microns current substrate 
 C_angle = 0.78173;%[ cos(a)/ 2L ]
 Bs = 115;%GPa for copper substrate (from McMaster)
-hf = 24e-6;%film thickness
+hf = 31e-6;%film thickness
 projdir = 'A13Data';
-C_rate = 4.7;
-mass = .017*.92;
+mass = .0194*.92;
+OneCRate = 5.35;
 
 
 MOSSFileList = dir(fullfile(projdir,'*.txt'));
@@ -84,9 +84,10 @@ end
 
 figure(1)
 plot(A13master.time_s/3600,A13master.stress_MPa);
-set(gca,'FontSize',26)
-xlabel('Time (Hrs)'); ylabel('Stress (MPa)');
+xlabel('Time (Hrs)');
 hold on;
 plot(A13master.time_s/3600,A13master.x_I__mA)
 plot(A13master.time_s/3600,A13master.Ewe_V)
+title(projdir)
+legend('MOS Stress (MPa)','Current (mA)','Voltage (V)')
 hold off;

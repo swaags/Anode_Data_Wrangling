@@ -1,7 +1,7 @@
 close all;clear
 format long;
 
-%taken from code Catherine provided me
+%initialize sample-specific vars
 hs = 509e-6;%microns current substrate 
 C_angle = 0.78173;%[ cos(a)/ 2L ]
 Bs = 115;%GPa for copper substrate (from McMaster)
@@ -54,13 +54,13 @@ end
 %build subtables from each half cycle and just charge cycles
 for i = hCycIndex'
     thisCycle = find(B4master.halfCycle==i);
-    startVals = B4master(thisCycle(1),:);
-    halfCycles{i} = B4master(thisCycle,:);
-    %halfCycles{i}.time_s = halfCycles{i}.time_s - startVals.time_s;
-    if startVals.ox_red == 0
-        chargeCycs{i} = table2array(B4master(thisCycle,:));
-    elseif startVals.ox_red == 1
-        dischargeCycs{i} = table2array(B4master(thisCycle,:));
+    thisArr = table2array(B4master(thisCycle,:));
+    startVals = thisArr(1,3);
+    halfCycles{i} = thisArr;
+    if startVals == 0
+        chargeCycs{i} = thisArr;
+    elseif startVals == 1
+        dischargeCycs{i} = thisArr;
     end
 end
 empInd = cellfun(@isempty, chargeCycs) == 0;
@@ -84,12 +84,14 @@ end
 
 figure(1)
 plot(B4master.time_s/3600,B4master.stress_MPa);
-set(gca,'FontSize',26)
-xlabel('Time (Hrs)'); ylabel('Stress (MPa)');
+xlabel('Time (Hrs)');
 hold on;
-plot(B4master.time_s/3600,B4master.x_I__mA)
-plot(B4master.time_s/3600,B4master.Ewe_V)
+plot(B4master.time_s/3600,B4master.x_I__mA,'-')
+plot(B4master.time_s/3600,B4master.Ewe_V,'-')
+title(projdir)
+legend('MOS Stress (MPa)','Current (mA)','Voltage (V)')
 hold off;
+
 
 %plot things from each half cycle (can just copy and paste this section
 %once this has been run once)
@@ -151,7 +153,7 @@ yfit = modelFun(mdl.Coefficients{:,1}',chrono.cycle_number);
 hold on
 %plot results to check fit
 plot(chrono.cycle_number,yfit)
-title(projdir);
+title(strcat(projdir,' Curve Fit of C/10 Cycles'));
 legend('data','fit');
 hold off
 
@@ -182,4 +184,4 @@ legend('Charge Stress Change St','Charge Stress Change End','Discharge Stress Ch
     'Low Hold Stress Change','Charge Capacity Start','Charge Capacity End','Discharge Capacity Start','Discharge Capacity End')
 xlabel('Cycle Number')
 ylabel('Capacity mAh/g')
-title('Baseline 4 Cycles')
+title(strcat(projdir,' Cycle Summary'))

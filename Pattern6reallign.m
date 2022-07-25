@@ -54,13 +54,13 @@ end
 %build subtables from each half cycle and just charge cycles
 for i = hCycIndex'
     thisCycle = find(P6master.halfCycle==i);
-    startVals = P6master(thisCycle(1),:);
-    halfCycles{i} = P6master(thisCycle,:);
-    %halfCycles{i}.time_s = halfCycles{i}.time_s - startVals.time_s;
-    if startVals.ox_red == 0
-        chargeCycs{i} = table2array(P6master(thisCycle,:));
-    elseif startVals.ox_red == 1
-        dischargeCycs{i} = table2array(P6master(thisCycle,:));
+    thisArr = table2array(P6master(thisCycle,:));
+    startVals = thisArr(1,3);
+    halfCycles{i} = thisArr;
+    if startVals == 0
+        chargeCycs{i} = thisArr;
+    elseif startVals == 1
+        dischargeCycs{i} = thisArr;
     end
 end
 empInd = cellfun(@isempty, chargeCycs) == 0;
@@ -87,12 +87,12 @@ end
 
 figure(1)
 plot(P6master.time_s/3600,P6master.stress_MPa);
-set(gca,'FontSize',18)
-xlabel('Time (Hrs)'); ylabel('Stress (MPa)');
+xlabel('Time (Hrs)');
 hold on;
 plot(P6master.time_s/3600,P6master.x_I__mA)
 plot(P6master.time_s/3600,P6master.Ewe_V)
 title(projdir)
+legend('MOS Stress (MPa)','Current (mA)','Voltage (V)')
 hold off;
 
 %plot things from each half cycle (can just copy and paste this section
@@ -144,7 +144,7 @@ chrono = array2table(chronoArray,'VariableNames',varNames);
 
 %normalize capacity by fitting c/10 discharge capacity fade curve
 figure(5)
-cTenths = chrono(find(chrono.c_rate<.1),{'cycle_number','dischgcap_end_mAhg'});
+cTenths = chrono(find(chrono.c_rate<.11),{'cycle_number','dischgcap_end_mAhg'});
 plot(cTenths.cycle_number,cTenths.dischgcap_end_mAhg,'ko')
 xlabel('cycle number');
 ylabel('capacity (mAh/g)');
@@ -155,14 +155,13 @@ yfit = modelFun(mdl.Coefficients{:,1}',chrono.cycle_number);
 hold on
 %plot results to check fit
 plot(chrono.cycle_number,yfit)
-title(projdir);
+title(strcat(projdir,' Curve Fit of C/10 Cycles'));
 legend('data','fit');
 hold off
 
 %add normalized capacity and C rate column to chrono table
 chrono.adjusted_cap  = yfit;
 chrono.actual_c_rate = abs(chrono.charge_current./chrono.adjusted_cap/mass);
-%chrono
 
 % UNCOMMENT THIS TO MAKE A CSV FILE
 %writetable(chrono,'Pattern6Chronology.csv')
@@ -187,4 +186,4 @@ legend('Charge Stress Change St','Charge Stress Change End','Discharge Stress Ch
     'Low Hold Stress Change','Charge Capacity Start','Charge Capacity End','Discharge Capacity Start','Discharge Capacity End')
 xlabel('Cycle Number')
 ylabel('Capacity mAh/g')
-title('Pattern 6 Cycles')
+title(strcat(projdir,' Cycle Summary'))

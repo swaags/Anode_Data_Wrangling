@@ -1,6 +1,6 @@
 %run <x>reallign first
 
-%choose what SOC you want to see stress values at
+%choose what SOC you want to see stress values at (0 - 1):
 SOCInq = .2;
 timeInq = SOCInq*3600;
 
@@ -8,14 +8,14 @@ figure(3)
 hold on
 rates = []; noStress = []; slice = zeros(length(chargeCycles),5); 
 for i = 1:length(chargeCycles)
-    i
+    %remove duplicate lines (necessary for interpolation later)
     [~, ia, ~] = unique(chargeCycles{i}(:,1),'stable');
     thisChg = chargeCycles{i}(ia,:);
     %find the row corresponding to the start of the bottom hold
     if min(thisChg(:,6)) < 0
         hsi = length(thisChg);%include hold in plating case
     else
-        hsi = find(thisChg(:,6)<0.013);
+        hsi = find(thisChg(:,6)<0.014);
         hsi = hsi(1);
     end
     crate = chrono.c_rate(i);
@@ -27,6 +27,7 @@ for i = 1:length(chargeCycles)
     startStrs = thisChg(1,2);%build stress differences for each section of cycle
     stress = thisChg(:,2)-startStrs;
     stress = stress(1:hsi);
+    %average and interpolate stress using new scaled time
     try
         stressInq = interp1(adjTimes,smoothdata(stress,'Gaussian',40),timeInq);
     catch
@@ -37,14 +38,16 @@ for i = 1:length(chargeCycles)
     if hsi(1) == 1 || sum(isnan(stress)) == length(stress)
         continue
     end
-    %{
     %downsample the most scrunched runs if desired
+    %{
     timeStep = adjTimes(2) - adjTimes(1);
     if timeStep < 5
         adjTimes = round(downsample(adjTimes,round(10/timeStep)),-1);
         stress = downsample(stress,round(10/timeStep));
     end
     %}
+    
+    %MIGHT NEED TO TWEAK THIS NUMBER (2) TO GET PLOT TO WORK NICELY 
     CR = round(crate*2);
     CR = CR+1;
     rates(i) = round(crate,2);
