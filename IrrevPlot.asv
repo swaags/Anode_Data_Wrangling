@@ -1,0 +1,15 @@
+
+figure(6)
+yyaxis left
+plot(chrono.cycle_number(1:28),chrono.irrev_stress,'-bo')
+ylabel('Stress MPa')
+yyaxis right
+plot(chrono.cycle_number,chrono.dischgcap_end_mAhg,'-mo')
+hold on
+plot(chrono.cycle_number,chrono.irrev_cap,'-ro')
+hold off
+grid on
+legend('Irreversible Stress','Discharge Capacity End','Irreversible Capacity')
+xlabel('Cycle Number')
+ylabel('Capacity mAh/g')
+title(strcat(projdir,' Cycle Summary'))

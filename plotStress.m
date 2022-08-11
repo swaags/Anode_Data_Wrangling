@@ -1,10 +1,12 @@
 %run <x>reallign first
+%SET TO "FALSE" TO OUTPUT UNNORMALIZED GRAPH
+NormalizeCRate = true; 
 
 %choose what SOC you want to see stress values at (0 - 1):
 SOCInq = .2;
 timeInq = SOCInq*3600;
 
-figure(3)
+figure(4)
 hold on
 rates = []; noStress = []; slice = zeros(length(chargeCycles),5); 
 for i = 1:length(chargeCycles)
@@ -19,7 +21,11 @@ for i = 1:length(chargeCycles)
         hsi = hsi(1);
     end
     crate = chrono.c_rate(i);
-    adjCRrate = chrono.actual_c_rate(i);
+    if NormalizeCRate
+        adjCRrate = chrono.actual_c_rate(i);
+    else
+        adjCRrate = crate;
+    end
     t = thisChg(1,1);
     %scale times by c rate (equivalent to SOC at 1C)
     adjTimes = (thisChg(:,1)-t).*adjCRrate;
@@ -70,7 +76,7 @@ end
 %writetable(NormStress,'XXXNormalizedStresses.csv')
 
 %This outputs just the stress values at the specified SOC above:
-%writetable(sliceTable,'XXXSlice.csv')
+writetable(sliceTable,'XXXSlice.csv')
 
 line([SOCInq, SOCInq], [2 -6], 'LineStyle','--')
 title('Stress vs. SOC for various C-rates')

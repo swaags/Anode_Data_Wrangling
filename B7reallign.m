@@ -94,10 +94,11 @@ hold off;
 
 %plot things from each half cycle (can just copy and paste this section
 %once this has been run once)
-sz = [length(chargeCycles) 12];
+sz = [length(chargeCycles) 14];
 varNames = {'cycle_number','chg_stress_change_start','chg_stress_change_end','dischg_stress_change_start',...
     'dischg_stress_change_end','low_hold_stress_change','chgcap_start_mAhg','chgcap_end_mAhg','dischgcap_start_mAhg',...
-    'dischgcap_end_mAhg','charge_current','c_rate','chg_stress_change_start_norm_MPa_mAhg','chg_stress_change_end_norm_MPa_mAhg',...
+    'dischgcap_end_mAhg','charge_current','c_rate','irrev_stress','irrev_cap',...
+    'chg_stress_change_start_norm_MPa_mAhg','chg_stress_change_end_norm_MPa_mAhg',...
     'dischg_stress_change_start_norm_MPa_mAhg','dischg_stress_change_end_norm_MPa_mAhg'};
 chronoArray = zeros(sz);
 for i = 1:length(chargeCycles)
@@ -121,21 +122,24 @@ for i = 1:length(chargeCycles)
     %DISCHARGE
     dischgStartStrs = thisDis(1,2);
     dischgHoldStartStrs = thisDis(dhsi(1),2);
-    dischgHoldEndStrs = thisDis(end,2);
+    dischgHoldEndStrs = thisDis(end-5,2);
     if isnan(dischgHoldEndStrs)%use last available data if final stress value is NaN
         lastIndex = sum(~isnan(thisDis(:,2)));
         if lastIndex > 0
             dischgHoldEndStrs = thisDis(lastIndex,2);
         end
-    end
+    end 
     dischgStrsChangeStart = abs(dischgHoldStartStrs - dischgStartStrs);
     dischgStrsChangeEnd = abs(dischgHoldEndStrs - dischgStartStrs);
+    %IRREVERSIBLE STRESS
+    irrevStrs = dischgHoldEndStrs - startStrs;
     crate = round(abs(thisChg(2,7)/OneCRate),2);
     chronoArray(i,:) = [i, chgStrsChangeStart,chgStrsChangeEnd, dischgStrsChangeStart,dischgStrsChangeEnd,lowHoldStrs,...
-        thisChg(hsi(1),9)/mass, thisChg(end,9)/mass, thisDis(dhsi(1),8)/mass, thisDis(end,8)/mass,thisChg(2,7),crate];
+        thisChg(hsi(1),9)/mass, thisChg(end,9)/mass, thisDis(dhsi(1),8)/mass, thisDis(end,8)/mass,thisChg(2,7),crate,...
+        irrevStrs, (thisChg(end,9) - thisDis(end,8))/mass];
 end
 %make normalized stress collumns
-chronoArray(:,13:16) = chronoArray(:,2:5)./chronoArray(:,7:10);
+chronoArray(:,15:18) = chronoArray(:,2:5)./chronoArray(:,7:10);
 chrono = array2table(chronoArray,'VariableNames',varNames);
 
 
@@ -161,26 +165,23 @@ chrono.adjusted_cap  = yfit;
 chrono.actual_c_rate = abs(chrono.charge_current./chrono.adjusted_cap/mass);
 
 % UNCOMMENT THIS TO MAKE A CSV FILE
-%writetable(chrono,'B7Chronology.csv')
+%writetable(chrono,'Pattern6Chronology.csv')
 
 figure(6)
 yyaxis left
-plot(chrono.cycle_number,chrono.chg_stress_change_start,'-bo')
+plot(chrono.cycle_number,chrono.chg_stress_change_end,'-bo')
 hold on
-plot(chrono.cycle_number,chrono.chg_stress_change_end,'-bs')
-plot(chrono.cycle_number,chrono.dischg_stress_change_start,'-ro')
 plot(chrono.cycle_number,chrono.dischg_stress_change_end,'-rs')
-plot(chrono.cycle_number,chrono.low_hold_stress_change,'-go')
+plot(chrono.cycle_number,chrono.irrev_stress,'-go')
 ylabel('Stress MPa')
 yyaxis right
-plot(chrono.cycle_number,chrono.chgcap_start_mAhg,'-b*')
-plot(chrono.cycle_number,chrono.chgcap_end_mAhg,'-b+')
-plot(chrono.cycle_number,chrono.dischgcap_start_mAhg,'-r*')
-plot(chrono.cycle_number,chrono.dischgcap_end_mAhg,'-r+')
+plot(chrono.cycle_number,chrono.chgcap_end_mAhg,'-b*')
+plot(chrono.cycle_number,chrono.dischgcap_end_mAhg,'-r*')
+plot(chrono.cycle_number,chrono.irrev_cap,'-g+')
 hold off
-
-legend('Charge Stress Change St','Charge Stress Change End','Discharge Stress Change St','Discharge Stress Change End',...
-    'Low Hold Stress Change','Charge Capacity Start','Charge Capacity End','Discharge Capacity Start','Discharge Capacity End')
+grid on
+legend('Charge Stress Change End','Discharge Stress Change End','Irreversible Stress',...
+    'Charge Capacity End','Discharge Capacity End','Irreversible Capacity')
 xlabel('Cycle Number')
 ylabel('Capacity mAh/g')
 title(strcat(projdir,' Cycle Summary'))
