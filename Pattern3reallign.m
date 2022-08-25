@@ -141,7 +141,7 @@ for i = 1:length(chargeCycles)
 end
 %make normalized stress collumns
 chronoArray(:,13:16) = chronoArray(:,2:5)./chronoArray(:,7:10);
-chrono = array2table(chronoArray,'VariableNames',varNames)
+chrono = array2table(chronoArray,'VariableNames',varNames);
 
 %normalize capacity by fitting c/10 discharge capacity fade curve
 figure(5)
